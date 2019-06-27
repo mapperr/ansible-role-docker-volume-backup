@@ -30,6 +30,6 @@
     user: "{{ CRON_JOB_USER }}"
     job: "sh /{{ CRON_JOB_FULL_NAME }}.sh"
     cron_file: "{{ CRON_JOB_FULL_NAME }}"
-    state: present
+    state: "{{ CRON_JOB_STATE }}"
   tags:
     - docker_volume_backup
