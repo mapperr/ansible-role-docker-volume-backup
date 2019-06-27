@@ -1,2 +1,35 @@
 ---
-# tasks file for docker_volume_backup
+# we assume cron and docker are installed and running
+
+- name: Build vars
+  set_fact:
+    CRON_JOB_FULL_NAME: "docker_volume_backup_{{ CRON_JOB_NAME }}"
+
+- name: Ensure backup dir is present
+  file:
+    path: "{{ BACKUP_DIRECTORY }}"
+    state: directory
+  tags:
+    - docker_volume_backup
+
+- name: Ensure backup script is present
+  template:
+    src: "{{ role_path }}/templates/docker_backup.sh.j2"
+    dest: "/{{ CRON_JOB_FULL_NAME }}.sh"
+    owner: "{{ CRON_JOB_USER }}"
+    group: "{{ CRON_JOB_USER }}"
+    mode: "a+rx"
+  tags:
+    - docker_volume_backup
+
+- name: Ensure a backup cron job is present
+  cron:
+    name: "{{ CRON_JOB_FULL_NAME }}"
+    minute: "{{ CRON_JOB_MINUTE }}"
+    hour: "{{ CRON_JOB_HOUR }}"
+    user: "{{ CRON_JOB_USER }}"
+    job: "sh /{{ CRON_JOB_FULL_NAME }}.sh"
+    cron_file: "{{ CRON_JOB_FULL_NAME }}"
+    state: present
+  tags:
+    - docker_volume_backup

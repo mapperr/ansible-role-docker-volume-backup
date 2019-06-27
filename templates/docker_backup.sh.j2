@@ -1,0 +1,45 @@
+#! /bin/sh
+
+NOW=`date '+%Y%m%d%H%M%S'`
+
+BACKUP_DIRECTORY="{{ BACKUP_DIRECTORY }}"
+COMPOSE_FILE_ABSOLUTE_PATH="{{ COMPOSE_FILE_ABSOLUTE_PATH }}"
+CONTAINER_NAMES="{{ CONTAINER_NAMES }}"
+VOLUME_NAMES="{{ VOLUME_NAMES }}"
+BACKUPS_TO_KEEP="{{ BACKUPS_TO_KEEP }}"
+
+# todo add return code check
+
+if [ ! -z "$COMPOSE_FILE_ABSOLUTE_PATH" ]; then
+    docker-compose -f $COMPOSE_FILE_ABSOLUTE_PATH down
+fi
+
+if [ ! -z "$CONTAINER_NAMES" ]; then
+    for container_name in $CONTAINER_NAMES; do docker stop $container_name; done
+fi
+
+
+for volume_name in $VOLUME_NAMES; do
+
+    # https://hub.docker.com/r/loomchild/volume-backup
+    docker run --rm -v $volume_name:/volume -v $BACKUP_DIRECTORY:/backup loomchild/volume-backup backup $volume_name-$NOW.tar.bz2
+
+    counter=0
+    for item in `ls $BACKUP_DIRECTORY/$volume_name-*.tar.bz2 | sort -r`; do
+        counter=`expr $counter + 1`
+        if [ $counter -le $BACKUPS_TO_KEEP ]; then
+            continue
+        fi
+        rm -f $item
+    done
+done
+
+
+if [ ! -z "$COMPOSE_FILE_ABSOLUTE_PATH" ]; then
+    docker-compose -f $COMPOSE_FILE_ABSOLUTE_PATH up -d
+fi
+
+if [ ! -z "$CONTAINER_NAMES" ]; then
+    for container_name in $CONTAINER_NAMES; do docker start $container_name; done
+fi
+

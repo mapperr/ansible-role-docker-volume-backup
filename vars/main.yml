@@ -1,2 +1,13 @@
----
-# vars file for docker_volume_backup
+CRON_JOB_MINUTE: "30"
+CRON_JOB_HOUR: "06"
+CRON_JOB_USER: "root"
+
+BACKUPS_TO_KEEP: "7"
+BACKUP_DIRECTORY: "/bak"
+
+
+CRON_JOB_NAME: ""
+
+CONTAINER_NAMES: ""
+COMPOSE_FILE_ABSOLUTE_PATH: ""
+VOLUME_NAMES: ""
